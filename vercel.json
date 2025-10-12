@@ -4,9 +4,6 @@
   "outputDirectory": "build",
   "framework": "create-react-app",
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
