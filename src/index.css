@@ -1,9 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root{ --reads-green: #0ea5a4 }
-
-.btn{ @apply px-4 py-2 rounded bg-green-600 text-white };
-.btn-outline{ @apply px-4 py-2 rounded border };
-.btn-ghost{ @apply px-4 py-2 rounded };

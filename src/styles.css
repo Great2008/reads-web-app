@@ -1,0 +1,44 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar {
+  background: #0a7b83;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+}
+
+.navbar .links a {
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.page {
+  padding: 2em;
+}
+
+.btn, button {
+  background: #0a7b83;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.btn:hover, button:hover {
+  background: #095d62;
+}
+
+.balance {
+  font-weight: bold;
+}
