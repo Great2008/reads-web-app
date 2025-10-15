@@ -66,3 +66,8 @@ MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Use Render's database URL
 DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
+import dj_database_url
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
+ALLOWED_HOSTS = ['*']
