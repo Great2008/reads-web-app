@@ -1,12 +1,19 @@
 import os
 from pathlib import Path
+import dj_database_url
 
+# ------------------------------
+# Base settings
+# ------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'reads-secret-key-for-mvp'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
+# ------------------------------
+# Installed apps
+# ------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -18,8 +25,12 @@ INSTALLED_APPS = [
     'users',
 ]
 
+# ------------------------------
+# Middleware
+# ------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -27,6 +38,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
 ]
 
+# ------------------------------
+# Templates
+# ------------------------------
 ROOT_URLCONF = 'reads_mvp.urls'
 
 TEMPLATES = [
@@ -47,29 +61,32 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'reads_mvp.wsgi.application'
 
-import os
-import dj_database_url
+# ------------------------------
+# Database Configuration
+# ------------------------------
+# Try to use DATABASE_URL (for Render), else fallback to SQLite
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
-        conn_max_age=600,
-    )
-}
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# ------------------------------
+# Static files
+# ------------------------------
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-import dj_database_url
-import os
-import dj_database_url
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Fix static files handling for production
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-# Use Render's database URL
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
-import dj_database_url
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
-ALLOWED_HOSTS = ['*']
+# ------------------------------
+# Misc
+# ------------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
