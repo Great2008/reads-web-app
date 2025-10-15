@@ -56,3 +56,13 @@ DATABASES = {
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+import dj_database_url
+import os
+import dj_database_url
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Fix static files handling for production
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+# Use Render's database URL
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
