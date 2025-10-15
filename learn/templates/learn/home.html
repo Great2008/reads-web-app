@@ -10,7 +10,11 @@
 
   {% for lesson in lessons %}
   <div class="lesson">
-    <h3>{{ lesson.title }}</h3>
+    <h3>
+      <a href="{% url 'lesson_detail' lesson.pk %}">
+        {{ lesson.title }}
+      </a>
+    </h3>
     <p>{{ lesson.description }}</p>
     <p>🎁 Reward: {{ lesson.reward_tokens }} $READS</p>
   </div>
