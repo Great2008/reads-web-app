@@ -1,1 +1,1 @@
-web: gunicorn reads_mvp.wsgi
+web: gunicorn reads_mvp.wsgi:application
