@@ -1,12 +1,100 @@
-/* --- General Reset --- */
+/* === NAVIGATION BAR === */
+.navbar {
+  width: 100%;
+  background: #0073e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+/* Menu items */
+.nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.nav-links li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.nav-links li a:hover {
+  color: #cce6ff;
+}
+
+/* Mobile menu toggle */
+.menu-icon {
+  display: none;
+  font-size: 1.8rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Hide the checkbox */
+#menu-toggle {
+  display: none;
+}
+
+/* Responsive menu */
+@media (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    width: 100%;
+    background: #0073e6;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .nav-links li {
+    margin: 15px 0;
+  }
+
+  #menu-toggle:checked + .menu-icon + .nav-links {
+    max-height: 250px;
+  }
+
+  .menu-icon {
+    display: block;
+  }
+}
+/* --- RESET --- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
-/* --- Body --- */
+/* --- BODY --- */
 body {
   background: linear-gradient(135deg, #f0f7ff, #e6f2ff);
   color: #333;
@@ -14,60 +102,74 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px 10px;
+  justify-content: flex-start;
+  padding: 40px 20px;
 }
 
-/* --- Header --- */
+/* --- HEADER --- */
 h1 {
   color: #0073e6;
-  font-size: 2rem;
+  font-size: 2.4rem;
   margin-bottom: 10px;
   text-align: center;
 }
 
 p {
-  font-size: 1rem;
+  font-size: 1.05rem;
   margin-bottom: 25px;
   text-align: center;
+  color: #555;
 }
 
-/* --- Lesson Cards --- */
+/* --- LESSON CARD --- */
 .lesson {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  padding: 20px;
-  margin: 15px 0;
-  width: 90%;
-  max-width: 500px;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 22px 25px;
+  margin: 15px auto;
+  width: 100%;
+  max-width: 700px;
   transition: all 0.3s ease;
 }
 
 .lesson:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* --- Lesson Title Link --- */
+/* --- TITLE LINK --- */
 .lesson h3 a {
   text-decoration: none;
-  color: #0073e6;
+  color: #0066cc;
   font-weight: 600;
-  font-size: 1.2rem;
-  transition: color 0.2s;
+  font-size: 1.25rem;
+  transition: color 0.2s ease;
 }
 
 .lesson h3 a:hover {
-  color: #004c99;
+  color: #004080;
 }
 
-/* --- Reward Info --- */
+/* --- DESCRIPTION --- */
+.lesson p {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* --- REWARD INFO --- */
 .lesson p:last-child {
-  font-weight: bold;
+  font-weight: 600;
   color: #00994d;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
 }
 
-/* --- Back Button --- */
+/* --- BACK BUTTON --- */
 a {
   color: #0073e6;
   text-decoration: none;
@@ -78,25 +180,72 @@ a:hover {
   text-decoration: underline;
 }
 
-/* --- Footer --- */
+/* --- FOOTER --- */
 footer {
-  margin-top: 30px;
+  margin-top: 40px;
   text-align: center;
   color: #555;
   font-size: 0.9rem;
 }
 
-/* --- Mobile-friendly adjustments --- */
+/* --- RESPONSIVE LAYOUT --- */
+
+/* Tablets (portrait and landscape) */
+@media (max-width: 1024px) {
+  body {
+    padding: 30px 15px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .lesson {
+    max-width: 600px;
+  }
+}
+
+/* Large phones / phablets */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .lesson {
+    padding: 18px 20px;
+    max-width: 500px;
+  }
+
+  .lesson h3 a {
+    font-size: 1.1rem;
+  }
+
+  .lesson p {
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile devices */
 @media (max-width: 480px) {
   body {
-    padding: 20px 5px;
+    padding: 20px 10px;
   }
 
   h1 {
     font-size: 1.6rem;
   }
 
+  p {
+    font-size: 0.9rem;
+  }
+
   .lesson {
     width: 100%;
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .lesson h3 a {
+    font-size: 1rem;
   }
 }

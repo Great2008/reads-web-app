@@ -5,6 +5,20 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">$READS</a>
+    <input type="checkbox" id="menu-toggle">
+    <label for="menu-toggle" class="menu-icon">&#9776;</label>
+
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/">Learn</a></li>
+      <li><a href="/admin/">Admin</a></li>
+      <li><a href="#">Earn Tokens</a></li>
+    </ul>
+  </div>
+</nav>
   <h1>{{ lesson.title }}</h1>
   <p>{{ lesson.description }}</p>
   <p>🎁 Reward: {{ lesson.reward_tokens }} $READS</p>
