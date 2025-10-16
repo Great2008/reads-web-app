@@ -22,18 +22,14 @@
   <h1>📘 Welcome to $READS MVP</h1>
   <p>Study lessons and earn tokens as rewards!</p>
 
-  {% for lesson in lessons %}
+  {{% for lesson in lessons %}
   <div class="lesson">
-    <h3>
-      <a href="{% url 'lesson_detail' lesson.pk %}">
-        {{ lesson.title }}
-      </a>
-    </h3>
+    <h3><a href="{% url 'lesson_detail' lesson.pk %}">{{ lesson.title }}</a></h3>
     <p>{{ lesson.description }}</p>
     <p>🎁 Reward: {{ lesson.reward_tokens }} $READS</p>
   </div>
-  {% empty %}
+{% empty %}
   <p>No lessons yet. Add some from the admin page.</p>
-  {% endfor %}
+{% endfor %}
 </body>
 </html>
