@@ -24,6 +24,7 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  /* Base padding for desktop/tablet */
   padding: 60px 20px 40px;
 }
 
@@ -84,42 +85,18 @@ body {
   font-size: 1.8rem;
   color: var(--gold);
   cursor: pointer;
+  /* Added for touch target size */
+  padding: 5px;
 }
 
 #menu-toggle {
   display: none;
 }
 
-@media (max-width: 768px) {
-  .nav-links {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    background: #111;
-    flex-direction: column;
-    align-items: center;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-  }
-
-  .nav-links li {
-    margin: 15px 0;
-  }
-
-  #menu-toggle:checked + .menu-icon + .nav-links {
-    max-height: 250px;
-  }
-
-  .menu-icon {
-    display: block;
-  }
-}
-
-/* === HEADERS === */
+/* --- HEADERS --- */
 h1 {
   color: var(--gold);
+  /* Desktop size */
   font-size: 2.4rem;
   margin-bottom: 10px;
   text-align: center;
@@ -138,6 +115,7 @@ p {
   border: 1px solid rgba(255, 215, 0, 0.15);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(212, 175, 55, 0.05);
+  /* Base padding for desktop/tablet */
   padding: 25px;
   margin: 15px auto;
   width: 100%;
@@ -155,6 +133,7 @@ p {
   text-decoration: none;
   color: var(--gold-light);
   font-weight: 600;
+  /* Desktop size */
   font-size: 1.3rem;
   transition: color 0.2s;
 }
@@ -167,6 +146,8 @@ p {
 .lesson p {
   margin-top: 10px;
   color: var(--muted-text);
+  /* Re-setting default text-align */
+  text-align: left;
   font-size: 1rem;
 }
 
@@ -178,6 +159,8 @@ p {
   display: flex;
   align-items: center;
   gap: 5px;
+  /* Re-setting default text-align */
+  text-align: left;
 }
 
 /* === FOOTER === */
@@ -188,38 +171,115 @@ footer {
   color: var(--muted-text);
 }
 
-/* === RESPONSIVE ADAPTATION === */
+
+/* === RESPONSIVE ADAPTATION (Tablet/Mid-size) === */
 @media (max-width: 1024px) {
+  /* Tablet-specific typography and spacing */
   h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
+  }
+
+  p {
+    margin-bottom: 20px;
   }
 }
 
+/* --- 768px (Standard Tablet/Large Mobile Landscape) --- */
 @media (max-width: 768px) {
+  /* **NAVBAR CHANGES** */
+  .nav-container {
+    padding: 10px 15px;
+  }
+
+  .nav-logo {
+    font-size: 1.5rem;
+  }
+
+  .nav-links {
+    position: absolute;
+    /* Adjust top based on new nav-container padding */
+    top: 50px;
+    left: 0;
+    width: 100%;
+    background: #111;
+    flex-direction: column;
+    align-items: center;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    /* Ensure links are fully above content */
+    z-index: 999;
+  }
+
+  .nav-links li {
+    margin: 15px 0;
+  }
+
+  #menu-toggle:checked + .menu-icon + .nav-links {
+    /* Adjusted height for a more realistic menu size */
+    max-height: 200px; 
+  }
+
+  .menu-icon {
+    display: block;
+  }
+  
+  /* **BODY/CONTENT CHANGES** */
   h1 {
-    font-size: 1.7rem;
+    font-size: 1.8rem;
+  }
+  
+  .lesson {
+    /* Reduced padding for smaller screen */
+    padding: 20px;
+  }
+
+  .lesson h3 a {
+    font-size: 1.2rem;
+  }
+
+  /* Footer adjustment */
+  footer {
+    margin-top: 30px;
+    font-size: 0.85rem;
+  }
+}
+
+/* --- 480px (Standard Mobile Portrait) --- */
+@media (max-width: 480px) {
+  body {
+    /* Increased side padding for mobile, reduced top/bottom */
+    padding: 30px 15px 20px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    /* Reduced margin for tighter vertical space */
+    margin-bottom: 5px; 
+  }
+
+  p {
+    font-size: 0.95rem;
+    margin-bottom: 15px;
   }
 
   .lesson {
-    padding: 18px;
+    border-radius: 12px;
+    /* Minimized padding for small screens */
+    padding: 15px; 
+    margin: 10px auto;
   }
 
   .lesson h3 a {
     font-size: 1.1rem;
   }
-}
 
-@media (max-width: 480px) {
-  body {
-    padding: 40px 10px;
+  .lesson p {
+    font-size: 0.9rem;
   }
 
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  .lesson {
-    border-radius: 14px;
-    padding: 16px;
+  .lesson p:last-child {
+    margin-top: 10px;
+    font-size: 0.9rem;
   }
 }
