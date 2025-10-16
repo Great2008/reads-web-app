@@ -8,3 +8,8 @@ def home(request):
 def lesson_detail(request, pk):
     lesson = get_object_or_404(Lesson, pk=pk)
     return render(request, 'learn/detail.html', {'lesson': lesson})
+    from django.contrib.auth.decorators import login_required
+
+@login_required(login_url='/users/login/')
+def home(request):
+    ...
