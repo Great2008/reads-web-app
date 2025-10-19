@@ -19,8 +19,8 @@
         <h3>{{ lesson.title }}</h3>
         <p>{{ lesson.description }}</p>
         <p class="reward">🎁 Reward: {{ lesson.reward_tokens }} $READS</p>
-        <a href="/learn/{{ lesson.id }}/" class="lesson-link">Start Lesson →</a></br>
-        <a href="/quiz/{{ lesson.id }}/" class="lesson-link">Take Quiz</a>
+<a href="{% url 'lesson_detail' lesson.id %}" class="btn">Start Lesson</a>
+<a href="{% url 'take_quiz' lesson.id %}" class="btn">Take Quiz</a>
       </div>
     {% empty %}
       <p>No lessons available yet. Check back soon!</p>
