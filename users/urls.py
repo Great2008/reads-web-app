@@ -2,13 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('register/', views.register_view, name='register'),
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-]
-from django.urls import path
-from . import views
-
-urlpatterns = [
     path('login/', views.custom_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+    path('dashboard/', views.user_dashboard, name='user_dashboard'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 ]

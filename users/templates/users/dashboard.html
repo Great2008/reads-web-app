@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$READS | Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dashboard-body">
+  <header class="dashboard-header">
+    <h1>👋 Welcome, {{ user.username }}</h1>
+    <a href="/users/logout/">Logout</a>
+  </header>
+
+  <main class="dashboard-main">
+    <h2>📚 Your Lessons</h2>
+    {% for lesson in lessons %}
+      <div class="lesson-card">
+        <h3>{{ lesson.title }}</h3>
+        <p>{{ lesson.description }}</p>
+        <p class="reward">🎁 Reward: {{ lesson.reward_tokens }} $READS</p>
+      </div>
+    {% empty %}
+      <p>No lessons available yet. Check back soon!</p>
+    {% endfor %}
+  </main>
+</body>
+</html>
