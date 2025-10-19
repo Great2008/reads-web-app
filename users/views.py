@@ -60,9 +60,16 @@ def logout_view(request):
 
 
 # ✅ DASHBOARD (role-based redirect)
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from learn.models import Lesson  # import your Lesson model
+
 @login_required(login_url='/users/login/')
 def dashboard(request):
     if request.user.is_staff:
+        # render admin dashboard
         return render(request, 'users/admin_dashboard.html')
     else:
-        return render(request, 'users/user_dashboard.html')
+        # for normal users, show lessons
+        lessons = Lesson.objects.all().order_by('-id')
+        return render(request, 'users/user_dashboard.html', {'lessons': lessons})

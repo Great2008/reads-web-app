@@ -383,3 +383,11 @@ footer {
   color: #ffcc00;
   font-weight: bold;
 }
+.lesson-link {
+  color: gold;
+  text-decoration: none;
+  font-weight: bold;
+}
+.lesson-link:hover {
+  text-decoration: underline;
+}
