@@ -1,34 +1,33 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 class Lesson(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    reward_tokens = models.IntegerField(default=10)
+    reward_tokens = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
 
 
 class Quiz(models.Model):
-    lesson = models.OneToOneField(Lesson, on_delete=models.CASCADE, related_name='quiz')
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes')
     title = models.CharField(max_length=200)
 
     def __str__(self):
-        return f"Quiz for {self.lesson.title}"
+        return f"{self.lesson.title} - {self.title}"
 
 
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
-    text = models.CharField(max_length=300)
-    option_a = models.CharField(max_length=100)
-    option_b = models.CharField(max_length=100)
-    option_c = models.CharField(max_length=100)
-    option_d = models.CharField(max_length=100)
+    question_text = models.CharField(max_length=300)
+    option_a = models.CharField(max_length=200)
+    option_b = models.CharField(max_length=200)
+    option_c = models.CharField(max_length=200)
+    option_d = models.CharField(max_length=200)
     correct_option = models.CharField(
         max_length=1,
         choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')]
     )
 
     def __str__(self):
-        return f"Q: {self.text[:50]}..."
+        return self.question_text
