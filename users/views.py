@@ -1,36 +1,68 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-def register_view(request):
+# ✅ REGISTER VIEW
+def register(request):
     if request.method == 'POST':
         username = request.POST['username']
-        password = request.POST['password']
-        role = request.POST['role']
-        user = User.objects.create_user(username=username, password=password)
+        email = request.POST['email']
+        password1 = request.POST['password1']
+        password2 = request.POST['password2']
+
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('register')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+            return redirect('register')
+
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        user.is_staff = False  # ensure not admin
+        user.is_superuser = False
         user.save()
-        messages.success(request, 'Account created successfully!')
-        return redirect('login')
+
+        login(request, user)
+        return redirect('dashboard')
+
     return render(request, 'users/register.html')
 
+
+# ✅ LOGIN VIEW (with Role Selection)
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
+        role = request.POST['role']
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            if role == 'admin' and not user.is_staff:
+                messages.error(request, 'You are not authorized as Admin.')
+                return redirect('login')
+
             login(request, user)
-            if request.POST.get('role') == 'admin':
-                return redirect('admin_dashboard')
             return redirect('dashboard')
         else:
-            messages.error(request, 'Invalid credentials')
+            messages.error(request, 'Invalid username or password.')
+            return redirect('login')
+
     return render(request, 'users/login.html')
 
-def dashboard(request):
-    return render(request, 'users/dashboard.html')
 
+# ✅ LOGOUT VIEW
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+
+# ✅ DASHBOARD (role-based redirect)
+@login_required(login_url='/users/login/')
+def dashboard(request):
+    if request.user.is_staff:
+        return render(request, 'users/admin_dashboard.html')
+    else:
+        return render(request, 'users/user_dashboard.html')
