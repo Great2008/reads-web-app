@@ -1,37 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>$READS | Admin Dashboard</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | $READS MVP</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #0b0b0b, #1a1a1a);
+      color: #f5c542;
+      min-height: 100vh;
+    }
+    header {
+      background: #111;
+      color: #f5c542;
+      padding: 15px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 20px;
+      border-bottom: 2px solid #f5c542;
+    }
+    main {
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid #f5c542;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 500px;
+      box-shadow: 0 0 10px rgba(245, 197, 66, 0.2);
+    }
+    a.btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #f5c542;
+      color: #111;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    a.btn:hover {
+      background: #ffe78b;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #888;
+    }
+  </style>
 </head>
-<body class="dashboard-body">
-  <header class="dashboard-header">
-    <h1>⚙️ Admin Dashboard</h1>
-    <a href="/users/logout/">Logout</a>
-  </header>
+<body>
+  <header>Admin Dashboard - $READS MVP</header>
+  <main>
+    <div class="card">
+      <h2>Welcome, {{ user.username }} 👑</h2>
+      <p>You have admin privileges on this platform.</p>
+      <p>Use the buttons below to manage lessons and users.</p>
 
-  <main class="dashboard-main">
-    <h2>Manage Lessons</h2>
-    <form method="POST">
-      {% csrf_token %}
-      <input type="text" name="title" placeholder="Lesson title" required>
-      <textarea name="description" placeholder="Lesson description" required></textarea>
-      <input type="number" name="reward_tokens" placeholder="Reward tokens" required>
-      <button type="submit">➕ Add Lesson</button>
-    </form>
-
-    <h3>Existing Lessons</h3>
-    {% for lesson in lessons %}
-      <div class="lesson-card">
-        <h4>{{ lesson.title }}</h4>
-        <p>{{ lesson.description }}</p>
-        <p>Reward: {{ lesson.reward_tokens }} $READS</p>
-      </div>
-    {% empty %}
-      <p>No lessons yet.</p>
-    {% endfor %}
+      <a href="/admin/" class="btn">Go to Admin Panel</a>
+      <a href="/users/logout/" class="btn" style="background:#d9534f; color:white;">Logout</a>
+    </div>
   </main>
+  <footer>&copy; 2025 $READS Technologies. All Rights Reserved.</footer>
 </body>
 </html>
