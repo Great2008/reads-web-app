@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BlockfrostService {
-  final String apiKey = "previewNqgFSwQobHLnp76WHlG37BZiop6hFgW7"; // your key
-  final String baseUrl = "https://cardano-preprod.blockfrost.io/api/v0"; // <-- changed
+  final String apiKey = "preprodxzKpfWOpi4jkIPqel0Mi0JJLnf6xqne3";
+  final String baseUrl = "https://cardano-preprod.blockfrost.io/api/v0";
 
   Future<String> getAdaBalance(String address) async {
     final url = Uri.parse('$baseUrl/addresses/$address');
