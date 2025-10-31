@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _getBalance() async {
-    String result = await BlockfrostService().getAdaBalance("YOUR_CARDANO_ADDRESS_HERE");
+    String result = await BlockfrostService().getAdaBalance("addr_test1qp3egmn0a7p75f29hsjgxwzed8dcav5ua8fjcet07jllmvxs8p2fqjn49skw6mss2jjkqjn7ca7402z3n3xuq8wedvcsq2quhy");
     setState(() => balance = result);
   }
 
