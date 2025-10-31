@@ -24,8 +24,20 @@ jobs:
       - name: Build web app
         run: flutter build web --release
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: build/web
+      - name: Deploy to web-build branch
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          # Create temporary directory for deployment
+          mkdir ../deploy
+          cp -r build/web/* ../deploy/
+          cd ../deploy
+
+          # Initialize Git repo and push to web-build branch
+          git init
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git checkout -b web-build
+          git add .
+          git commit -m "Auto-deploy Flutter web build"
+          git push --force origin web-build
