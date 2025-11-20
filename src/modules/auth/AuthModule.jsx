@@ -73,7 +73,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
     <div className="max-w-xs sm:max-w-sm mx-auto p-4 pt-10">
       {/* Top Logo and Slogan */}
       <div className="flex flex-col items-center mb-10">
-        <img src={logoUrl} alt="$READS Logo" className="w-12 h-12 mb-2" />
+        <img src={assets/reads-logo.png} alt="$READS Logo" className="w-12 h-12 mb-2" />
         <h1 className="text-3xl font-bold text-reads-dark dark:text-white">$READS</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">Learn. Earn. Excel.</p>
       </div>
