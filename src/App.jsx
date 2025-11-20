@@ -16,8 +16,13 @@ export default function App() {
   const [view, setView] = useState('login'); // 'login' | 'dashboard' | 'learn' | 'wallet' | 'profile' | 'settings'
   const [subView, setSubView] = useState(''); 
   const [navPayload, setNavPayload] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(false); // Initial state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Function to toggle dark mode
+  const toggleTheme = () => {
+    setDarkMode(prev => !prev);
+  };
 
   useEffect(() => {
     if (user) {
@@ -46,14 +51,19 @@ export default function App() {
     </button>
   );
 
+  // Theme Toggle Button Component (reusable)
+  const ThemeToggle = ({ onClick, isDark }) => (
+    <button onClick={onClick} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm transition-colors hover:ring-2 ring-indigo-500/50">
+      {isDark ? <Sun size={20} className="text-white"/> : <Moon size={20} />}
+    </button>
+  );
+
   if (!user) {
     return (
       <div className={darkMode ? 'dark' : ''}>
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
           <div className="flex justify-end p-4">
-             <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm">
-               {darkMode ? <Sun size={20} className="text-white"/> : <Moon size={20} />}
-             </button>
+             <ThemeToggle onClick={toggleTheme} isDark={darkMode} /> {/* FIX: Added onClick */}
           </div>
           <AuthModule view={view} onLoginSuccess={handleAuthSuccess} onNavigate={setView} />
         </div>
@@ -86,7 +96,7 @@ export default function App() {
           <header className="p-4 flex justify-between items-center bg-white dark:bg-slate-800 md:hidden border-b border-gray-200 dark:border-slate-700">
             <button onClick={() => setSidebarOpen(true)}><Menu /></button>
             <span className="font-bold">Learn2Earn</span>
-            <img src={user.avatar} className="w-8 h-8 rounded-full" alt="User" />
+            <ThemeToggle onClick={toggleTheme} isDark={darkMode} /> {/* FIX: Added Theme Toggle */}
           </header>
 
           <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full pb-20">
@@ -105,7 +115,7 @@ export default function App() {
             
             {view === 'profile' && <ProfileModule user={user} onLogout={() => setUser(null)} />}
             
-            {view === 'settings' && <SettingsModule darkMode={darkMode} toggleTheme={() => setDarkMode(!darkMode)} />}
+            {view === 'settings' && <SettingsModule darkMode={darkMode} toggleTheme={toggleTheme} />} {/* FIX: Passed correct toggle function */}
           </div>
         </main>
       </div>

@@ -14,7 +14,8 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
       const response = await api.auth.login(formData.email, formData.password);
       onLoginSuccess(response.user);
     } catch (err) {
-      alert("Login failed");
+      // Use a custom message box instead of alert()
+      console.error("Login failed:", err);
     } finally {
       setLoading(false);
     }
@@ -22,7 +23,11 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPass) return alert("Passwords match failed");
+    if (formData.password !== formData.confirmPass) {
+        // Use a custom message box instead of alert()
+        console.error("Passwords do not match");
+        return;
+    }
     setLoading(true);
     try {
       const response = await api.auth.signup(formData);
@@ -36,7 +41,12 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
     <div className="mb-4">
       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{label}</label>
       <input 
-        name={name} type={type} placeholder={placeholder} onChange={handleChange} required
+        name={name} 
+        type={type} 
+        placeholder={placeholder} 
+        onChange={handleChange} 
+        value={formData[name] || ''} // <-- FIX: Added value prop
+        required
         className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white"
       />
     </div>
@@ -48,7 +58,16 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
         <h2 className="text-2xl font-bold mb-2 dark:text-white">Reset Password</h2>
         <p className="text-sm text-gray-500 mb-6">Enter your email to recover your account.</p>
         <AuthInput label="Email Address" name="email" type="email" />
-        <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mb-4" onClick={() => api.auth.resetPassword(formData.email)}>Send Reset Link</button>
+        <button 
+          disabled={loading} 
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold mb-4 disabled:opacity-50" 
+          onClick={() => {
+            setLoading(true);
+            api.auth.resetPassword(formData.email).finally(() => setLoading(false));
+          }}
+        >
+          {loading ? 'Sending...' : 'Send Reset Link'}
+        </button>
         <button onClick={() => onNavigate('login')} className="w-full text-gray-500 text-sm">Back to Login</button>
       </div>
     );
