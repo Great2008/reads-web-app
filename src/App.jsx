@@ -10,6 +10,9 @@ import WalletModule from './modules/wallet/WalletModule';
 import ProfileModule from './modules/profile/ProfileModule';
 import SettingsModule from './modules/settings/SettingsModule';
 
+// Placeholder URL for the logo until you place it in assets/reads-logo.png
+const LOGO_URL = "https://placehold.co/40x40/F5BE4E/1F2937?text=$R";
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [tokenBalance, setTokenBalance] = useState(0);
@@ -55,7 +58,7 @@ export default function App() {
   const SidebarItem = ({ icon, label, active, onClick }) => (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700'}`}
+      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all ${active ? 'bg-reads-gold text-reads-dark shadow-lg shadow-reads-gold/30' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700'}`}
     >
       {icon} <span className="font-medium">{label}</span>
     </button>
@@ -63,32 +66,38 @@ export default function App() {
 
   // Theme Toggle Button Component (reusable)
   const ThemeToggle = ({ onClick, isDark }) => (
-    <button onClick={onClick} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-sm transition-colors hover:ring-2 ring-indigo-500/50">
-      {isDark ? <Sun size={20} className="text-white"/> : <Moon size={20} />}
+    <button onClick={onClick} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-card transition-colors hover:ring-2 ring-reads-gold/50">
+      {isDark ? <Sun size={20} className="text-white"/> : <Moon size={20} className="text-reads-dark" />}
     </button>
   );
 
   // Unauthenticated View
+  // Changed background to soft app-background
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
+      <div className="min-h-screen bg-app-background dark:bg-slate-900 transition-colors duration-300">
         <div className="flex justify-end p-4">
            <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
         </div>
-        <AuthModule view={view} onLoginSuccess={handleAuthSuccess} onNavigate={setView} />
+        {/* AuthModule will contain the main card design */}
+        <AuthModule view={view} onLoginSuccess={handleAuthSuccess} onNavigate={setView} logoUrl={LOGO_URL} />
       </div>
     );
   }
 
   // Authenticated View
+  // Changed background and sidebar colors
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300 flex">
+    <div className="min-h-screen bg-app-background dark:bg-slate-900 text-reads-dark dark:text-gray-100 font-sans transition-colors duration-300 flex">
       
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <aside className={`fixed md:sticky top-0 h-screen w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-6 z-50 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-2xl font-bold text-indigo-600 tracking-tighter">L2E App</h1>
+          <div className="flex items-center gap-2">
+            <img src={LOGO_URL} alt="Reads Logo" className="w-8 h-8 rounded-full" />
+            <h1 className="text-xl font-bold text-reads-dark dark:text-white tracking-tighter">$READS</h1>
+          </div>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden"><X /></button>
         </div>
         
