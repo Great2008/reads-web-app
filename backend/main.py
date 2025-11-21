@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -6,23 +7,34 @@ from typing import List
 from datetime import datetime
 import uuid
 
-# Import app modules
-from app import models, schemas, auth, database
+# --- FINAL FIX: Use relative imports for Vercel stability ---
+# IMPORTANT: This assumes 'main.py' is one level above 'app'
+try:
+    from app import models, schemas, auth, database
+except ImportError:
+    # Fallback for local testing if relative path fails
+    from .app import models, schemas, auth, database 
+
 
 # Initialize DB
+print("Attempting to create database tables...")
 models.Base.metadata.create_all(bind=database.engine)
+print("Database tables initialized successfully (or already exist).")
 
-# --- FIX: Add root_path="/api" so FastAPI knows it is running behind a proxy ---
+
+# --- Ensure the root_path is set for Vercel routing ---
 app = FastAPI(title="$READS Backend", root_path="/api")
+print("FastAPI app initialized with root_path=/api")
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"], # In production, replace with your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # --- 3.1 Authentication ---
 
