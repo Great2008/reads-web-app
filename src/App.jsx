@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, BookOpen, Wallet, User, Settings as SettingsIcon, Menu, X, Sun, Moon } from 'lucide-react';
 import { api } from './services/api';
-
-// Import local logo image
-import readsLogo from '../assets/reads-logo.png';
+import readsLogo from '../assets/reads-logo.png'; // Import local logo image
 
 // Import Modules
 import AuthModule from './modules/auth/AuthModule';
@@ -17,7 +15,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false); // State to wait for Firebase
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [view, setView] = useState('login'); // Default view until auth is ready
+  const [view, setView] = useState('login'); // Default view is always login
   const [subView, setSubView] = useState(''); 
   const [navPayload, setNavPayload] = useState(null);
   const [darkMode, setDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches); 
@@ -25,32 +23,52 @@ export default function App() {
 
   // 1. Firebase Auth Listener
   useEffect(() => {
-    // Only proceed if api.auth is defined
-    if (!api.auth) {
+    if (!api.auth || !api.auth.onAuthStateChanged) {
         setIsAuthReady(true);
         return;
     }
 
     const unsubscribe = api.auth.onAuthStateChanged((user) => {
         if (user) {
+            // User is signed in (anonymously or via custom token)
             setUser({ uid: user.uid, email: user.email || 'N/A', displayName: user.displayName || 'User' });
-            setView('dashboard'); // Navigate to dashboard on successful sign-in
+            
+            // *** CRITICAL CHANGE HERE ***
+            // Do NOT automatically navigate to 'dashboard'. 
+            // We let the initial 'login' state stand until a real login action occurs.
+            // However, we can switch to dashboard if a user was already authenticated 
+            // and the component is just remounting.
+            if (view === 'login' || view === 'signup' || view === 'forgot-password') {
+                // If we are currently on an auth screen, keep the view as is until a button is pressed.
+                // Alternatively, if the user state changes from null to a user, we can navigate.
+                // For simplicity now, let's only navigate if a *previous* sign-in failed/logged out.
+                // For the initial anonymous sign-in, we must remain on 'login'.
+            }
+
         } else {
+            // User is signed out
             setUser(null);
             setView('login'); // Navigate to login if signed out
         }
-        // Set ready *after* the initial auth check completes
         setIsAuthReady(true);
     });
 
     return () => unsubscribe();
-  }, []); 
-
+  }, []); // Run only once on mount
+  
   // 2. Data Fetching (runs after authentication is ready)
   useEffect(() => {
     if (isAuthReady && user) {
         // Fetch wallet balance
         api.wallet.getBalance().then(data => setTokenBalance(data.balance));
+        // Ensure the view is set to dashboard if we found an existing authenticated user
+        if (view === 'login') {
+             setView('dashboard');
+        }
+    }
+    // If user is null, make sure view is 'login'
+    if (isAuthReady && !user) {
+        setView('login');
     }
   }, [isAuthReady, user]);
 
@@ -106,18 +124,22 @@ export default function App() {
   }
 
   // Unauthenticated View
-  if (!user || view === 'login' || view === 'signup' || view === 'forgot-password') {
+  // If the user is present (due to anonymous sign-in), but the view is still set to an auth page (the default),
+  // we render the auth page. This is the trick to show the login screen first.
+  if (view === 'login' || view === 'signup' || view === 'forgot-password') {
     return (
       <div className="min-h-screen bg-app-background dark:bg-slate-900 transition-colors duration-300">
         <div className="flex justify-end p-4">
            <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
         </div>
-        <AuthModule view={view} onLoginSuccess={() => {}} onNavigate={setView} logoUrl={readsLogo} />
+        {/* onLoginSuccess now just triggers a view change, as the listener handles user state */}
+        <AuthModule view={view} onLoginSuccess={() => handleNavigate('dashboard')} onNavigate={setView} />
       </div>
     );
   }
 
   // Authenticated View
+  // If we reach here, user is likely present AND the view is dashboard/profile/etc.
   return (
     <div className="min-h-screen bg-app-background dark:bg-slate-900 text-reads-dark dark:text-gray-100 font-sans transition-colors duration-300 flex">
       
