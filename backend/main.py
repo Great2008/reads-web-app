@@ -6,17 +6,19 @@ from typing import List
 from datetime import datetime
 import uuid
 
+# Import app modules
 from app import models, schemas, auth, database
 
 # Initialize DB
 models.Base.metadata.create_all(bind=database.engine)
 
-app = FastAPI(title="$READS Backend")
+# --- FIX: Add root_path="/api" so FastAPI knows it is running behind a proxy ---
+app = FastAPI(title="$READS Backend", root_path="/api")
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with your frontend URL
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -84,7 +86,6 @@ def get_balance(current_user: models.User = Depends(auth.get_current_user)):
 
 @app.get("/lessons/categories")
 def get_categories(db: Session = Depends(database.get_db)):
-    # Group by category and count
     results = db.query(models.Lesson.category, func.count(models.Lesson.id)).group_by(models.Lesson.category).all()
     return [{"category": r[0], "count": r[1]} for r in results]
 
@@ -101,7 +102,6 @@ def get_lesson_detail(lesson_id: uuid.UUID, db: Session = Depends(database.get_d
 
 @app.post("/lesson/{lesson_id}/complete")
 def complete_lesson(lesson_id: uuid.UUID, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    # Check progress
     progress = db.query(models.LessonProgress).filter(
         models.LessonProgress.user_id == current_user.id,
         models.LessonProgress.lesson_id == lesson_id
@@ -126,12 +126,10 @@ def start_quiz(lesson_id: uuid.UUID, db: Session = Depends(database.get_db), cur
 
 @app.post("/quiz/submit", response_model=schemas.QuizResultResponse)
 def submit_quiz(submission: schemas.QuizSubmitRequest, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
-    # 1. Fetch Questions
     questions = db.query(models.QuizQuestion).filter(models.QuizQuestion.lesson_id == submission.lesson_id).all()
     if not questions:
         raise HTTPException(status_code=404, detail="Quiz not found")
 
-    # 2. Calculate Score
     correct_count = 0
     question_map = {q.id: q.correct_option for q in questions}
 
@@ -142,10 +140,8 @@ def submit_quiz(submission: schemas.QuizSubmitRequest, db: Session = Depends(dat
     wrong_count = len(questions) - correct_count
     score = int((correct_count / len(questions)) * 100)
 
-    # 3. Calculate Tokens (MVP Logic: correct * 2)
     tokens_awarded = correct_count * 2
 
-    # 4. Save Result
     result = models.QuizResult(
         user_id=current_user.id,
         lesson_id=submission.lesson_id,
@@ -155,7 +151,6 @@ def submit_quiz(submission: schemas.QuizSubmitRequest, db: Session = Depends(dat
     )
     db.add(result)
 
-    # 5. Save Reward
     if tokens_awarded > 0:
         reward = models.Reward(
             user_id=current_user.id,
@@ -163,8 +158,6 @@ def submit_quiz(submission: schemas.QuizSubmitRequest, db: Session = Depends(dat
             tokens_earned=tokens_awarded
         )
         db.add(reward)
-
-        # 6. Update Wallet
         current_user.wallet.token_balance += tokens_awarded
     
     db.commit()

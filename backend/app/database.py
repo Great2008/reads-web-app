@@ -5,10 +5,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Use the environment variable or fallback to a local default for testing
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost/reads_mvp")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# --- FIX: Ensure URL starts with postgresql:// ---
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Fallback for local testing
+if not DATABASE_URL:
+    DATABASE_URL = "postgresql://postgres:password@localhost/reads_mvp"
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
