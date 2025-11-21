@@ -19,7 +19,6 @@ export default {
         'reads-dark': '#1F2937', 
       },
       fontFamily: {
-        // You might want to use a cleaner font, keeping Inter for now
         sans: ['Inter', 'sans-serif'],
       },
       boxShadow: {

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, BookOpen, Wallet, User, Settings as SettingsIcon, Menu, X, Sun, Moon } from 'lucide-react';
 import { api } from './services/api';
 
+// Import local logo image
+import readsLogo from '../assets/reads-logo.png';
+
 // Import Modules
 import AuthModule from './modules/auth/AuthModule';
 import Dashboard from './modules/dashboard/Dashboard';
@@ -10,23 +13,47 @@ import WalletModule from './modules/wallet/WalletModule';
 import ProfileModule from './modules/profile/ProfileModule';
 import SettingsModule from './modules/settings/SettingsModule';
 
-// Placeholder URL for the logo until you place it in assets/reads-logo.png
-const LOGO_URL = "https://placehold.co/40x40/F5BE4E/1F2937?text=$R";
-
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false); // State to wait for Firebase
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [view, setView] = useState('login'); // 'login' | 'dashboard' | 'learn' | 'wallet' | 'profile' | 'settings'
+  const [view, setView] = useState('login'); // Default view until auth is ready
   const [subView, setSubView] = useState(''); 
   const [navPayload, setNavPayload] = useState(null);
-  // Initialize dark mode based on system preference or local storage (if we were using it)
   const [darkMode, setDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches); 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Function to toggle dark mode
-  const toggleTheme = () => {
-    setDarkMode(prev => !prev);
-  };
+  // 1. Firebase Auth Listener
+  useEffect(() => {
+    // Only proceed if api.auth is defined
+    if (!api.auth) {
+        setIsAuthReady(true);
+        return;
+    }
+
+    const unsubscribe = api.auth.onAuthStateChanged((user) => {
+        if (user) {
+            setUser({ uid: user.uid, email: user.email || 'N/A', displayName: user.displayName || 'User' });
+            setView('dashboard'); // Navigate to dashboard on successful sign-in
+        } else {
+            setUser(null);
+            setView('login'); // Navigate to login if signed out
+        }
+        // Set ready *after* the initial auth check completes
+        setIsAuthReady(true);
+    });
+
+    return () => unsubscribe();
+  }, []); 
+
+  // 2. Data Fetching (runs after authentication is ready)
+  useEffect(() => {
+    if (isAuthReady && user) {
+        // Fetch wallet balance
+        api.wallet.getBalance().then(data => setTokenBalance(data.balance));
+    }
+  }, [isAuthReady, user]);
+
 
   // Apply 'dark' class to the root element when darkMode state changes
   useEffect(() => {
@@ -37,11 +64,9 @@ export default function App() {
     }
   }, [darkMode]);
 
-  useEffect(() => {
-    if (user) {
-      api.wallet.getBalance().then(data => setTokenBalance(data.balance));
-    }
-  }, [user]);
+  const toggleTheme = () => {
+    setDarkMode(prev => !prev);
+  };
 
   const handleNavigate = (mainView, sub = '', payload = null) => {
     setView(mainView);
@@ -50,10 +75,10 @@ export default function App() {
     setSidebarOpen(false);
   };
 
-  const handleAuthSuccess = (userData) => {
-    setUser(userData);
-    handleNavigate('dashboard');
-  };
+  // Logout function
+  const handleLogout = async () => {
+    await api.auth.logout();
+  }
 
   const SidebarItem = ({ icon, label, active, onClick }) => (
     <button 
@@ -71,22 +96,28 @@ export default function App() {
     </button>
   );
 
+  // Show a loading screen while authentication is initializing
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-app-background dark:bg-slate-900">
+        <div className="text-reads-dark dark:text-white text-lg font-semibold animate-pulse">Initializing App...</div>
+      </div>
+    );
+  }
+
   // Unauthenticated View
-  // Changed background to soft app-background
-  if (!user) {
+  if (!user || view === 'login' || view === 'signup' || view === 'forgot-password') {
     return (
       <div className="min-h-screen bg-app-background dark:bg-slate-900 transition-colors duration-300">
         <div className="flex justify-end p-4">
            <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
         </div>
-        {/* AuthModule will contain the main card design */}
-        <AuthModule view={view} onLoginSuccess={handleAuthSuccess} onNavigate={setView} logoUrl={LOGO_URL} />
+        <AuthModule view={view} onLoginSuccess={() => {}} onNavigate={setView} logoUrl={readsLogo} />
       </div>
     );
   }
 
   // Authenticated View
-  // Changed background and sidebar colors
   return (
     <div className="min-h-screen bg-app-background dark:bg-slate-900 text-reads-dark dark:text-gray-100 font-sans transition-colors duration-300 flex">
       
@@ -95,7 +126,7 @@ export default function App() {
       <aside className={`fixed md:sticky top-0 h-screen w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-6 z-50 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex justify-between items-center mb-10">
           <div className="flex items-center gap-2">
-            <img src={LOGO_URL} alt="Reads Logo" className="w-8 h-8 rounded-full" />
+            <img src={readsLogo} alt="Reads Logo" className="w-8 h-8 rounded-full" />
             <h1 className="text-xl font-bold text-reads-dark dark:text-white tracking-tighter">$READS</h1>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden"><X /></button>
@@ -108,12 +139,21 @@ export default function App() {
           <SidebarItem icon={<User size={20} />} label="Profile" active={view === 'profile'} onClick={() => handleNavigate('profile')} />
           <SidebarItem icon={<SettingsIcon size={20} />} label="Settings" active={view === 'settings'} onClick={() => handleNavigate('settings')} />
         </nav>
+        {/* Logout button */}
+        <div className="absolute bottom-6 w-full pr-12">
+            <button 
+                onClick={handleLogout}
+                className="w-full py-2 px-3 rounded-xl text-red-500 border border-red-500/20 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+            >
+                Log Out
+            </button>
+        </div>
       </aside>
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="p-4 flex justify-between items-center bg-white dark:bg-slate-800 md:hidden border-b border-gray-200 dark:border-slate-700">
           <button onClick={() => setSidebarOpen(true)}><Menu /></button>
-          <span className="font-bold">Learn2Earn</span>
+          <span className="font-bold">$READS</span>
           <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
         </header>
 
@@ -131,7 +171,7 @@ export default function App() {
           
           {view === 'wallet' && <WalletModule balance={tokenBalance} />}
           
-          {view === 'profile' && <ProfileModule user={user} onLogout={() => setUser(null)} />}
+          {view === 'profile' && <ProfileModule user={user} onLogout={handleLogout} />}
           
           {view === 'settings' && <SettingsModule darkMode={darkMode} toggleTheme={toggleTheme} />}
         </div>

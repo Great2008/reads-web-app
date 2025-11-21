@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
+import readsLogo from '../../../assets/reads-logo.png'; // Updated path for the image from AuthModule
 
-const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
+const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', confirmPass: '' });
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +28,10 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
     setLoading(true);
     try {
       const response = await api.auth.login(formData.email, formData.password);
-      onLoginSuccess(response.user);
+      // In a real Firebase setup, onLoginSuccess is often not needed, but we keep it for simplicity.
+      // The onAuthStateChanged listener in App.jsx will handle navigation.
+      console.log("Mock login successful.");
+      onNavigate('dashboard');
     } catch (err) {
       // Use a custom message box instead of alert()
       console.error("Login failed:", err);
@@ -46,7 +50,9 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
     setLoading(true);
     try {
       const response = await api.auth.signup(formData);
-      onLoginSuccess(response.user);
+      // The onAuthStateChanged listener in App.jsx will handle navigation.
+      console.log("Mock signup successful.");
+      onNavigate('dashboard');
     } finally {
       setLoading(false);
     }
@@ -55,7 +61,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
   // New clean input style matching the design
   const AuthInput = ({ label, name, type = "text", placeholder }) => (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-500 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-2">{label}</label>
       <input 
         name={name} 
         type={type} 
@@ -63,7 +69,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
         onChange={handleChange} 
         value={formData[name] || ''}
         required
-        className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-reads-gold outline-none bg-white/50 transition-colors dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+        className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-reads-gold outline-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
       />
     </div>
   );
@@ -73,7 +79,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
     <div className="max-w-xs sm:max-w-sm mx-auto p-4 pt-10">
       {/* Top Logo and Slogan */}
       <div className="flex flex-col items-center mb-10">
-        <img src={assets/reads-logo.png} alt="$READS Logo" className="w-12 h-12 mb-2" />
+        <img src={readsLogo} alt="$READS Logo" className="w-12 h-12 mb-2" />
         <h1 className="text-3xl font-bold text-reads-dark dark:text-white">$READS</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">Learn. Earn. Excel.</p>
       </div>
@@ -89,7 +95,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
   if (view === 'forgot-password') {
     return (
       <AuthLayout title="Reset Password">
-        <p className="text-sm text-gray-500 mb-6">Enter your email to recover your account.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your email to recover your account.</p>
         <AuthInput label="Email" name="email" type="email" placeholder="user@example.com" />
         <GoldButton
           type="button"
@@ -101,7 +107,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
         >
           {loading ? 'Sending...' : 'Send Reset Link'}
         </GoldButton>
-        <button onClick={() => onNavigate('login')} className="w-full text-gray-500 text-sm mt-4">Back to Login</button>
+        <button onClick={() => onNavigate('login')} className="w-full text-gray-500 dark:text-gray-400 text-sm mt-4">Back to Login</button>
       </AuthLayout>
     );
   }
@@ -118,7 +124,7 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
              {loading ? 'Creating...' : 'Sign Up'}
           </GoldButton>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
           Already have an account? <button onClick={() => onNavigate('login')} className="text-reads-gold font-semibold">Login</button>
         </p>
       </AuthLayout>
@@ -131,15 +137,14 @@ const AuthModule = ({ view, onLoginSuccess, onNavigate, logoUrl }) => {
         <AuthInput label="Email" name="email" type="email" placeholder="user@example.com" />
         <AuthInput label="Password" name="password" type="password" placeholder="••••••" />
         <div className="flex justify-end mb-6">
-          <button type="button" onClick={() => onNavigate('forgot-password')} className="text-sm text-green-500 dark:text-green-400 font-medium">Forgot password?</button>
+          <button type="button" onClick={() => onNavigate('forgot-password')} className="text-sm text-reads-gold font-medium hover:text-reads-gold/80 transition-colors">Forgot password?</button>
         </div>
         <GoldButton type="submit" disabled={loading}>
              {loading ? 'Logging in...' : 'Login'}
         </GoldButton>
       </form>
-      <div className="mt-6 text-center text-sm text-gray-500 space-y-2">
+      <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
         <p>Don't have an account? <button onClick={() => onNavigate('signup')} className="text-reads-gold font-semibold">Sign up</button></p>
-        <p>Back to Home | Privacy Policy</p>
       </div>
     </AuthLayout>
   );
