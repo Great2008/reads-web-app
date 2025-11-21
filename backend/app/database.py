@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
-from fastapi import HTTPException # Import HTTPException for runtime error reporting
+from fastapi import HTTPException 
 
 load_dotenv()
 
@@ -12,35 +12,26 @@ DATABASE_URL = None
 
 if DATABASE_URL_RAW:
     # 1. Standardize scheme to 'postgresql://' as required by SQLAlchemy
-    if DATABASE_URL_RAW.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL_RAW.replace("postgres://", "postgresql://", 1)
-    elif DATABASE_URL_RAW.startswith("postgresql://"):
-        DATABASE_URL = DATABASE_URL_RAW
-    else:
-        # Fallback for weirdly formatted URLs, though unlikely
-        print(f"WARNING: DATABASE_URL has non-standard prefix: {DATABASE_URL_RAW}")
-        DATABASE_URL = DATABASE_URL_RAW
-
-# 2. Local Fallback for debugging (only runs if DB is not set in env)
-if not DATABASE_URL:
+    # CRITICAL: We also replace 'postgres://' with 'postgresql://' if found
+    DATABASE_URL = DATABASE_URL_RAW.replace("postgres://", "postgresql://", 1)
+    
+    # We are reverting to the hostname URL, as static IPs are failing with timeout.
+    # The hope is that simplifying the connection arguments helps Vercel resolve the hostname better.
+else:
+    # Local Fallback for debugging (only runs if DB is not set in env)
     DATABASE_URL = "postgresql://postgres:password@localhost/reads_mvp"
     print("WARNING: Using local default database URL.")
 
 
 # --- Vercel/Cloud Connection Arguments ---
-# Cloud platforms require 'sslmode=require' for PostgreSQL (Supabase/Heroku)
+# We REMOVE the explicit connect_args={"sslmode": "require"} to simplify connection attempt.
 connect_args = {}
-if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
-    # This is a safe addition for external PostgreSQL services
-    if 'VERCEL' in os.environ or DATABASE_URL_RAW is not None: 
-         connect_args["sslmode"] = "require"
-         print("Using SSL Mode: require for PostgreSQL connection.")
 
 
-# Pass the connect_args to the engine initialization
+# Pass the connect_args (now empty) to the engine initialization
 engine = create_engine(
     DATABASE_URL,
-    connect_args=connect_args, # CRITICAL FOR CLOUD SSL
+    connect_args=connect_args, 
     pool_recycle=3600 # Helps manage dropped connections
 )
 
@@ -52,7 +43,6 @@ def get_db():
     db = SessionLocal()
     try:
         # PING the DB connection right here to test it early
-        # This will be the line that crashes if the DB config is wrong
         db.connection() 
         yield db
     except Exception as e:
