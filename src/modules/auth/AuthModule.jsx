@@ -1,153 +1,238 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
-import readsLogo from '../../../assets/reads-logo.png'; // Updated path for the image from AuthModule
 
-const AuthModule = ({ view, onLoginSuccess, onNavigate }) => {
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', confirmPass: '' });
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  // Custom Gradient Button Component
-  const GoldButton = ({ children, onClick, disabled, className = '', type = 'button' }) => (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`w-full py-3 rounded-lg font-semibold text-reads-dark transition-all disabled:opacity-50
-                  bg-gradient-to-t from-reads-gold/90 to-reads-gold hover:from-reads-gold/80 hover:to-reads-gold/90
-                  shadow-smooth hover:shadow-lg ${className}`}
-    >
-      {children}
-    </button>
-  );
-
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await api.auth.login(formData.email, formData.password);
-      // In a real Firebase setup, onLoginSuccess is often not needed, but we keep it for simplicity.
-      // The onAuthStateChanged listener in App.jsx will handle navigation.
-      console.log("Mock login successful.");
-      onNavigate('dashboard');
-    } catch (err) {
-      // Use a custom message box instead of alert()
-      console.error("Login failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPass) {
-        // Use a custom message box instead of alert()
-        console.error("Passwords do not match");
-        return;
-    }
-    setLoading(true);
-    try {
-      const response = await api.auth.signup(formData);
-      // The onAuthStateChanged listener in App.jsx will handle navigation.
-      console.log("Mock signup successful.");
-      onNavigate('dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // New clean input style matching the design
-  const AuthInput = ({ label, name, type = "text", placeholder }) => (
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-500 dark:text-gray-300 mb-2">{label}</label>
-      <input 
-        name={name} 
-        type={type} 
-        placeholder={placeholder} 
-        onChange={handleChange} 
-        value={formData[name] || ''}
-        required
-        className="w-full p-3 rounded-lg border border-gray-300 focus:ring-1 focus:ring-reads-gold outline-none bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-      />
+const InputField = ({ label, type, name, value, onChange, placeholder, required = true }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {label}
+        </label>
+        <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg shadow-sm focus:ring-reads-gold focus:border-reads-gold dark:bg-slate-700 dark:text-white transition-colors"
+        />
     </div>
-  );
+);
 
-  // Layout container matching the main design structure
-  const AuthLayout = ({ title, children }) => (
-    <div className="max-w-xs sm:max-w-sm mx-auto p-4 pt-10">
-      {/* Top Logo and Slogan */}
-      <div className="flex flex-col items-center mb-10">
-        <img src={readsLogo} alt="$READS Logo" className="w-12 h-12 mb-2" />
-        <h1 className="text-3xl font-bold text-reads-dark dark:text-white">$READS</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Learn. Earn. Excel.</p>
-      </div>
+const SignupForm = ({ onLoginSuccess, onNavigate }) => {
+    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [isLoading, setIsLoading] = useState(false);
 
-      {/* Login/Signup Card */}
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-smooth p-6 sm:p-8">
-        <h2 className="text-xl font-bold text-reads-dark dark:text-white mb-6 text-center">{title}</h2>
-        {children}
-      </div>
-    </div>
-  );
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-  if (view === 'forgot-password') {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            // This calls the API, which now has the alert() for errors
+            await api.auth.signup(formData);
+            
+            // --- CRITICAL SUCCESS STATE ---
+            onLoginSuccess(); 
+            // -----------------------------
+        } catch (error) {
+            console.error('Signup error:', error);
+            // The alert is triggered inside api.js. 
+            // If the alert shows a 500 error, it means the DB connection failed.
+        } finally {
+            // This ensures the button state always resets
+            setIsLoading(false);
+        }
+    };
+
     return (
-      <AuthLayout title="Reset Password">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your email to recover your account.</p>
-        <AuthInput label="Email" name="email" type="email" placeholder="user@example.com" />
-        <GoldButton
-          type="button"
-          disabled={loading} 
-          onClick={() => {
-            setLoading(true);
-            api.auth.resetPassword(formData.email).finally(() => setLoading(false));
-          }}
-        >
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </GoldButton>
-        <button onClick={() => onNavigate('login')} className="w-full text-gray-500 dark:text-gray-400 text-sm mt-4">Back to Login</button>
-      </AuthLayout>
-    );
-  }
-
-  if (view === 'signup') {
-    return (
-      <AuthLayout title="Create Account">
-        <form onSubmit={handleSignup}>
-          <AuthInput label="Full Name" name="name" placeholder="John Doe" />
-          <AuthInput label="Email" name="email" type="email" placeholder="john@example.com" />
-          <AuthInput label="Password" name="password" type="password" placeholder="••••••" />
-          <AuthInput label="Confirm Password" name="confirmPass" type="password" placeholder="••••••" />
-          <GoldButton type="submit" disabled={loading}>
-             {loading ? 'Creating...' : 'Sign Up'}
-          </GoldButton>
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <InputField 
+                label="Full Name" 
+                type="text" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange} 
+                placeholder="John Doe" 
+            />
+            <InputField 
+                label="Email" 
+                type="email" 
+                name="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                placeholder="you@example.com" 
+            />
+            <InputField 
+                label="Password" 
+                type="password" 
+                name="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="••••••••" 
+            />
+            
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-reads-dark text-white font-semibold rounded-xl hover:bg-reads-gold hover:text-reads-dark transition-all shadow-md disabled:bg-gray-400"
+            >
+                {isLoading ? 'Creating...' : 'Sign Up'}
+            </button>
+            
+            <div className="text-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Already have an account? </span>
+                <button 
+                    type="button" 
+                    onClick={() => onNavigate('login')}
+                    className="text-reads-gold font-medium hover:underline"
+                >
+                    Log In
+                </button>
+            </div>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          Already have an account? <button onClick={() => onNavigate('login')} className="text-reads-gold font-semibold">Login</button>
-        </p>
-      </AuthLayout>
     );
-  }
-
-  return (
-    <AuthLayout title="Login">
-      <form onSubmit={handleLogin}>
-        <AuthInput label="Email" name="email" type="email" placeholder="user@example.com" />
-        <AuthInput label="Password" name="password" type="password" placeholder="••••••" />
-        <div className="flex justify-end mb-6">
-          <button type="button" onClick={() => onNavigate('forgot-password')} className="text-sm text-reads-gold font-medium hover:text-reads-gold/80 transition-colors">Forgot password?</button>
-        </div>
-        <GoldButton type="submit" disabled={loading}>
-             {loading ? 'Logging in...' : 'Login'}
-        </GoldButton>
-      </form>
-      <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 space-y-2">
-        <p>Don't have an account? <button onClick={() => onNavigate('signup')} className="text-reads-gold font-semibold">Sign up</button></p>
-      </div>
-    </AuthLayout>
-  );
 };
 
-export default AuthModule;
+const LoginForm = ({ onLoginSuccess, onNavigate }) => {
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        try {
+            await api.auth.login(formData.email, formData.password);
+            onLoginSuccess();
+        } catch (error) {
+            console.error('Login error:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <InputField 
+                label="Email" 
+                type="email" 
+                name="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                placeholder="you@example.com" 
+            />
+            <InputField 
+                label="Password" 
+                type="password" 
+                name="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="••••••••" 
+            />
+            
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-reads-dark text-white font-semibold rounded-xl hover:bg-reads-gold hover:text-reads-dark transition-all shadow-md disabled:bg-gray-400"
+            >
+                {isLoading ? 'Logging In...' : 'Log In'}
+            </button>
+            
+            <div className="text-center text-sm">
+                <button 
+                    type="button" 
+                    onClick={() => onNavigate('forgot-password')}
+                    className="text-gray-600 dark:text-gray-400 font-medium hover:underline"
+                >
+                    Forgot Password?
+                </button>
+            </div>
+            <div className="text-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Don't have an account? </span>
+                <button 
+                    type="button" 
+                    onClick={() => onNavigate('signup')}
+                    className="text-reads-gold font-medium hover:underline"
+                >
+                    Sign Up
+                </button>
+            </div>
+        </form>
+    );
+};
+
+const ForgotPasswordForm = ({ onNavigate }) => (
+    <div className="space-y-6">
+        <p className="text-center text-gray-600 dark:text-gray-400">
+            A password reset link will be sent to your email. (Feature not implemented in backend MVP)
+        </p>
+        <InputField 
+            label="Email" 
+            type="email" 
+            name="email" 
+            placeholder="you@example.com" 
+            required={false}
+        />
+        <button
+            type="button"
+            className="w-full py-3 px-4 bg-reads-dark text-white font-semibold rounded-xl transition-all shadow-md"
+            onClick={() => alert("Password reset is not yet supported in the backend MVP.")}
+        >
+            Send Reset Link
+        </button>
+        <div className="text-center text-sm">
+            <button 
+                type="button" 
+                onClick={() => onNavigate('login')}
+                className="text-reads-gold font-medium hover:underline"
+            >
+                Back to Login
+            </button>
+        </div>
+    </div>
+);
+
+
+export default function AuthModule({ view, onLoginSuccess, onNavigate, logoUrl }) {
+    
+    let content;
+    let title;
+
+    switch (view) {
+        case 'signup':
+            content = <SignupForm onLoginSuccess={onLoginSuccess} onNavigate={onNavigate} />;
+            title = 'Create Your Account';
+            break;
+        case 'forgot-password':
+            content = <ForgotPasswordForm onNavigate={onNavigate} />;
+            title = 'Forgot Password';
+            break;
+        case 'login':
+        default:
+            content = <LoginForm onLoginSuccess={onLoginSuccess} onNavigate={onNavigate} />;
+            title = 'Welcome Back';
+            break;
+    }
+
+    return (
+        <div className="max-w-md mx-auto p-4 md:p-8">
+            <div className="text-center mb-8">
+                <img src={logoUrl} alt="Reads Logo" className="w-20 h-20 mx-auto mb-4 rounded-full shadow-lg" />
+                <h2 className="text-3xl font-extrabold text-reads-dark dark:text-white">{title}</h2>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Sign in to start learning and earning $READS tokens.
+                </p>
+            </div>
+            <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700">
+                {content}
+            </div>
+        </div>
+    );
+}
+
