@@ -5,6 +5,25 @@ const getAuthHeader = () => {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
+// Helper function to process failed responses aggressively
+const handleFailedResponse = async (res, action) => {
+    let errorDetail = `Failed to ${action} (Status: ${res.status})`;
+    
+    try {
+        // Try to parse JSON for detailed error message (FastAPI standard)
+        const data = await res.json();
+        errorDetail = data.detail || errorDetail;
+    } catch (e) {
+        // If JSON parsing fails (e.g., Vercel 500 HTML page)
+        // Try to get the raw text, but limit it to prevent huge alerts
+        const text = await res.text();
+        errorDetail = `${errorDetail}. Server response: ${text.substring(0, 100)}... (Check Vercel logs)`;
+    }
+    
+    alert(`${action} Failed: ${errorDetail}`); 
+    throw new Error(errorDetail);
+}
+
 export const api = {
     auth: {
         login: async (email, password) => {
@@ -14,14 +33,11 @@ export const api = {
                 body: JSON.stringify({ email, password })
             });
             
-            const data = await res.json();
-            
             if (!res.ok) {
-                // Alert the user so we know why it failed
-                alert(`Login Failed: ${data.detail || 'Unknown Error'}`); 
-                throw new Error(data.detail || 'Login failed');
+                await handleFailedResponse(res, 'Login');
             }
             
+            const data = await res.json();
             localStorage.setItem('access_token', data.access_token);
             return data;
         },
@@ -36,14 +52,11 @@ export const api = {
                 })
             });
             
-            const data = await res.json();
-
             if (!res.ok) {
-                // Alert the user so we know why it failed
-                alert(`Signup Failed: ${data.detail || 'Unknown Error'}`);
-                throw new Error(data.detail || 'Signup failed');
+                await handleFailedResponse(res, 'Signup');
             }
             
+            const data = await res.json();
             localStorage.setItem('access_token', data.access_token);
             return data;
         },
@@ -96,7 +109,6 @@ export const api = {
             });
         },
         submitQuiz: async (lessonId, score) => {
-             // Placeholder for now
              return { earned: score > 50 ? 20 : 0 };
         }
     },
