@@ -11,10 +11,15 @@ import os
 from .app import models, schemas, auth, database
 
 
-# Initialize DB
+# Initialize DB - WRAP THIS IN A TRY/EXCEPT BLOCK
 print("Attempting to create database tables...")
-models.Base.metadata.create_all(bind=database.engine)
-print("Database tables initialized successfully (or already exist).")
+try:
+    # This might fail due to permissions or connection issues. If it fails, 
+    # the server still starts, but endpoints that use `get_db` will crash (and log the error).
+    models.Base.metadata.create_all(bind=database.engine)
+    print("Database tables initialized successfully (or already exist).")
+except Exception as e:
+    print(f"WARNING: Initial database table creation failed. This is likely a connection or permission issue. Error: {e}")
 
 
 # --- Ensure the root_path is set for Vercel routing ---
