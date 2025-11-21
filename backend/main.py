@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -6,14 +5,10 @@ from sqlalchemy import func
 from typing import List
 from datetime import datetime
 import uuid
+import os
 
-# --- FINAL FIX: Use relative imports for Vercel stability ---
-# IMPORTANT: This assumes 'main.py' is one level above 'app'
-try:
-    from app import models, schemas, auth, database
-except ImportError:
-    # Fallback for local testing if relative path fails
-    from .app import models, schemas, auth, database 
+# Use standard imports, relying on vercel.json to configure the path correctly
+from app import models, schemas, auth, database
 
 
 # Initialize DB
@@ -29,7 +24,7 @@ print("FastAPI app initialized with root_path=/api")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with your frontend URL
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,8 +35,10 @@ app.add_middleware(
 
 @app.post("/auth/signup", response_model=schemas.Token)
 def signup(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
+    print(f"Attempting signup for: {user_in.email}")
     # 1. Check email
     if db.query(models.User).filter(models.User.email == user_in.email).first():
+        print("Email already registered (400)")
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # 2. Create User
@@ -62,6 +59,7 @@ def signup(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
 
     # 4. Return Token
     access_token = auth.create_access_token(data={"sub": str(new_user.id)})
+    print("User created and token returned (200)")
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.post("/auth/login", response_model=schemas.Token)
