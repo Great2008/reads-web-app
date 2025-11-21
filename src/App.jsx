@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, BookOpen, Wallet, User, Settings as SettingsIcon, Menu, X, Sun, Moon } from 'lucide-react';
 import { api } from './services/api';
-import readsLogo from '../assets/reads-logo.png'; // Import local logo image
+import readsLogo from '../assets/reads-logo.png'; 
 
-// Import Modules
 import AuthModule from './modules/auth/AuthModule';
 import Dashboard from './modules/dashboard/Dashboard';
 import LearnModule from './modules/learn/LearnModule';
@@ -13,78 +12,47 @@ import SettingsModule from './modules/settings/SettingsModule';
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false); // State to wait for Firebase
   const [tokenBalance, setTokenBalance] = useState(0);
-  const [view, setView] = useState('login'); // Default view is always login
+  const [view, setView] = useState('login'); 
   const [subView, setSubView] = useState(''); 
   const [navPayload, setNavPayload] = useState(null);
   const [darkMode, setDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches); 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 1. Firebase Auth Listener
+  // 1. Check for User Session on App Load
   useEffect(() => {
-    if (!api.auth || !api.auth.onAuthStateChanged) {
-        setIsAuthReady(true);
-        return;
-    }
-
-    const unsubscribe = api.auth.onAuthStateChanged((user) => {
-        if (user) {
-            // User is signed in (anonymously or via custom token)
-            setUser({ uid: user.uid, email: user.email || 'N/A', displayName: user.displayName || 'User' });
-            
-            // *** CRITICAL CHANGE HERE ***
-            // Do NOT automatically navigate to 'dashboard'. 
-            // We let the initial 'login' state stand until a real login action occurs.
-            // However, we can switch to dashboard if a user was already authenticated 
-            // and the component is just remounting.
-            if (view === 'login' || view === 'signup' || view === 'forgot-password') {
-                // If we are currently on an auth screen, keep the view as is until a button is pressed.
-                // Alternatively, if the user state changes from null to a user, we can navigate.
-                // For simplicity now, let's only navigate if a *previous* sign-in failed/logged out.
-                // For the initial anonymous sign-in, we must remain on 'login'.
+    const checkSession = async () => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            const userData = await api.auth.me();
+            if (userData) {
+                setUser(userData);
+                setView('dashboard');
+            } else {
+                // Token invalid
+                localStorage.removeItem('access_token');
             }
-
-        } else {
-            // User is signed out
-            setUser(null);
-            setView('login'); // Navigate to login if signed out
         }
-        setIsAuthReady(true);
-    });
+        setIsLoading(false);
+    };
+    checkSession();
+  }, []);
 
-    return () => unsubscribe();
-  }, []); // Run only once on mount
-  
-  // 2. Data Fetching (runs after authentication is ready)
+  // 2. Fetch Wallet when User changes
   useEffect(() => {
-    if (isAuthReady && user) {
-        // Fetch wallet balance
+    if (user) {
         api.wallet.getBalance().then(data => setTokenBalance(data.balance));
-        // Ensure the view is set to dashboard if we found an existing authenticated user
-        if (view === 'login') {
-             setView('dashboard');
-        }
     }
-    // If user is null, make sure view is 'login'
-    if (isAuthReady && !user) {
-        setView('login');
-    }
-  }, [isAuthReady, user]);
+  }, [user]);
 
-
-  // Apply 'dark' class to the root element when darkMode state changes
+  // 3. Dark Mode Logic
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, [darkMode]);
 
-  const toggleTheme = () => {
-    setDarkMode(prev => !prev);
-  };
+  const toggleTheme = () => setDarkMode(prev => !prev);
 
   const handleNavigate = (mainView, sub = '', payload = null) => {
     setView(mainView);
@@ -93,9 +61,16 @@ export default function App() {
     setSidebarOpen(false);
   };
 
-  // Logout function
+  const handleLoginSuccess = async () => {
+      const userData = await api.auth.me();
+      setUser(userData);
+      setView('dashboard');
+  };
+
   const handleLogout = async () => {
     await api.auth.logout();
+    setUser(null);
+    setView('login');
   }
 
   const SidebarItem = ({ icon, label, active, onClick }) => (
@@ -107,39 +82,38 @@ export default function App() {
     </button>
   );
 
-  // Theme Toggle Button Component (reusable)
   const ThemeToggle = ({ onClick, isDark }) => (
     <button onClick={onClick} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-card transition-colors hover:ring-2 ring-reads-gold/50">
       {isDark ? <Sun size={20} className="text-white"/> : <Moon size={20} className="text-reads-dark" />}
     </button>
   );
 
-  // Show a loading screen while authentication is initializing
-  if (!isAuthReady) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-app-background dark:bg-slate-900">
-        <div className="text-reads-dark dark:text-white text-lg font-semibold animate-pulse">Initializing App...</div>
+        <div className="text-reads-dark dark:text-white text-lg font-semibold animate-pulse">Loading...</div>
       </div>
     );
   }
 
   // Unauthenticated View
-  // If the user is present (due to anonymous sign-in), but the view is still set to an auth page (the default),
-  // we render the auth page. This is the trick to show the login screen first.
-  if (view === 'login' || view === 'signup' || view === 'forgot-password') {
+  if (!user) {
     return (
       <div className="min-h-screen bg-app-background dark:bg-slate-900 transition-colors duration-300">
         <div className="flex justify-end p-4">
            <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
         </div>
-        {/* onLoginSuccess now just triggers a view change, as the listener handles user state */}
-        <AuthModule view={view} onLoginSuccess={() => handleNavigate('dashboard')} onNavigate={setView} />
+        <AuthModule 
+            view={view === 'signup' || view === 'forgot-password' ? view : 'login'} 
+            onLoginSuccess={handleLoginSuccess} 
+            onNavigate={setView} 
+            logoUrl={readsLogo} 
+        />
       </div>
     );
   }
 
   // Authenticated View
-  // If we reach here, user is likely present AND the view is dashboard/profile/etc.
   return (
     <div className="min-h-screen bg-app-background dark:bg-slate-900 text-reads-dark dark:text-gray-100 font-sans transition-colors duration-300 flex">
       
@@ -161,13 +135,13 @@ export default function App() {
           <SidebarItem icon={<User size={20} />} label="Profile" active={view === 'profile'} onClick={() => handleNavigate('profile')} />
           <SidebarItem icon={<SettingsIcon size={20} />} label="Settings" active={view === 'settings'} onClick={() => handleNavigate('settings')} />
         </nav>
-        {/* Logout button */}
+        
         <div className="absolute bottom-6 w-full pr-12">
             <button 
                 onClick={handleLogout}
                 className="w-full py-2 px-3 rounded-xl text-red-500 border border-red-500/20 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
             >
-                Log Out
+                <User size={18} /> Log Out
             </button>
         </div>
       </aside>
