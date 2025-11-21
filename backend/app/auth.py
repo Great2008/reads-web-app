@@ -7,9 +7,10 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app import models, database, schemas
+# --- CRITICAL FIX: Use relative imports ---
+from . import models, database, schemas 
 
-# --- FIX 2: Ensure SECRET_KEY has a fallback ---
+# --- Ensure SECRET_KEY has a fallback ---
 SECRET_KEY = os.getenv("SECRET_KEY", "your-default-very-secret-key-fallback-never-use-in-prod") 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60

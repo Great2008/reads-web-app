@@ -7,8 +7,8 @@ from datetime import datetime
 import uuid
 import os
 
-# Use standard imports, relying on vercel.json to configure the path correctly
-from app import models, schemas, auth, database
+# --- CRITICAL FIX: Use relative imports for Vercel runtime environment ---
+from .app import models, schemas, auth, database
 
 
 # Initialize DB

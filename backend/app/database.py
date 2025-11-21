@@ -30,7 +30,7 @@ if not DATABASE_URL:
 # --- Vercel/Cloud Connection Arguments ---
 # Cloud platforms require 'sslmode=require' for PostgreSQL (Supabase/Heroku)
 connect_args = {}
-if DATABASE_URL.startswith("postgresql://"):
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
     # This is a safe addition for external PostgreSQL services
     if 'VERCEL' in os.environ or DATABASE_URL_RAW is not None: 
          connect_args["sslmode"] = "require"
