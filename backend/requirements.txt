@@ -3,7 +3,8 @@ uvicorn
 python-multipart
 pydantic
 sqlalchemy
-"python-jose[cryptography]"
+python-jose
+cryptography
 ​Locked versions to fix the 'bcrypt' attribute error
 ​passlib==1.7.4
 bcrypt==4.1.2
