@@ -1,177 +1,253 @@
-import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, BookOpen, Wallet, User, Settings as SettingsIcon, Menu, X, Sun, Moon } from 'lucide-react';
-import { api } from './services/api';
-import readsLogo from '../assets/reads-logo.png'; 
+import React, { useState, useMemo } from 'react';
+import { BookOpen, DollarSign, Zap, Target, TrendingUp, Wallet, CheckCircle, Bell, User, LayoutDashboard } from 'lucide-react';
 
-import AuthModule from './modules/auth/AuthModule';
-import Dashboard from './modules/dashboard/Dashboard';
-import LearnModule from './modules/learn/LearnModule';
-import WalletModule from './modules/wallet/WalletModule';
-import ProfileModule from './modules/profile/ProfileModule';
-import SettingsModule from './modules/settings/SettingsModule';
+// --- Static Data & Mocks ---
 
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [tokenBalance, setTokenBalance] = useState(0);
-  const [view, setView] = useState('login'); 
-  const [subView, setSubView] = useState(''); 
-  const [navPayload, setNavPayload] = useState(null);
-  const [darkMode, setDarkMode] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches); 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+const mockUserData = {
+  name: "John Doe",
+  avatarUrl: "https://placehold.co/40x40/007bff/ffffff?text=JD", 
+};
 
-  // 1. Check for User Session on App Load
-  useEffect(() => {
-    const checkSession = async () => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            const userData = await api.auth.me();
-            if (userData) {
-                setUser(userData);
-                setView('dashboard');
-            } else {
-                // Token invalid
-                localStorage.removeItem('access_token');
-            }
-        }
-        setIsLoading(false);
-    };
-    checkSession();
-  }, []);
+const mockLearningData = {
+  lessonsCompleted: 14,
+  testsPassed: 7,
+  weeklyLessonsDone: 3,
+  weeklyLessonsTotal: 5,
+  nextLessonTitle: "Algebra Basics",
+};
 
-  // 2. Fetch Wallet when User changes
-  useEffect(() => {
-    if (user) {
-        api.wallet.getBalance().then(data => setTokenBalance(data.balance));
-    }
-  }, [user]);
+const mockWalletData = {
+  tokenBalance: 1200, // $READS
+  earnedToday: 120,
+};
 
-  // 3. Dark Mode Logic
-  useEffect(() => {
-    if (darkMode) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [darkMode]);
+// --- Components ---
 
-  const toggleTheme = () => setDarkMode(prev => !prev);
+/**
+ * Reusable Card Component for Grid Items
+ */
+const GridCard = ({ icon: Icon, title, onClick }) => (
+  <div 
+    className="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-md transition duration-200 hover:shadow-lg hover:ring-2 hover:ring-indigo-500 cursor-pointer"
+    onClick={onClick}
+  >
+    <div className="p-3 bg-yellow-100 text-yellow-600 rounded-lg mb-2">
+      <Icon size={24} />
+    </div>
+    <p className="text-sm font-semibold text-gray-700 text-center">{title}</p>
+  </div>
+);
 
-  const handleNavigate = (mainView, sub = '', payload = null) => {
-    setView(mainView);
-    setSubView(sub);
-    if (payload) setNavPayload(payload);
-    setSidebarOpen(false);
-  };
+/**
+ * Wallet Balance Card (Top Banner)
+ */
+const TokenBalanceCard = () => (
+  <div className="p-5 bg-white rounded-xl shadow-lg border-b-4 border-green-500 mb-6">
+    <p className="text-sm text-gray-500 font-medium">Token Balance</p>
+    <div className="text-4xl font-extrabold text-green-600 my-1">
+      {mockWalletData.tokenBalance} $READS
+    </div>
+    <div className="flex items-center text-sm font-medium text-green-700 bg-green-100 px-3 py-1 rounded-full w-fit">
+      <TrendingUp size={16} className="mr-1" />
+      <span>+${mockWalletData.earnedToday} earned today</span>
+    </div>
+  </div>
+);
 
-  const handleLoginSuccess = async () => {
-      const userData = await api.auth.me();
-      setUser(userData);
-      setView('dashboard');
-  };
-
-  const handleLogout = async () => {
-    await api.auth.logout();
-    setUser(null);
-    setView('login');
-  }
-
-  const SidebarItem = ({ icon, label, active, onClick }) => (
-    <button 
-      onClick={onClick}
-      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all ${active ? 'bg-reads-gold text-reads-dark shadow-lg shadow-reads-gold/30' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700'}`}
-    >
-      {icon} <span className="font-medium">{label}</span>
-    </button>
-  );
-
-  const ThemeToggle = ({ onClick, isDark }) => (
-    <button onClick={onClick} className="p-2 rounded-full bg-white dark:bg-slate-800 shadow-card transition-colors hover:ring-2 ring-reads-gold/50">
-      {isDark ? <Sun size={20} className="text-white"/> : <Moon size={20} className="text-reads-dark" />}
-    </button>
-  );
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-app-background dark:bg-slate-900">
-        <div className="text-reads-dark dark:text-white text-lg font-semibold animate-pulse">Loading...</div>
+/**
+ * Learning Stats Card
+ */
+const LearningStatsCard = () => (
+  <div className="grid grid-cols-2 gap-4">
+    <div className="p-4 bg-white rounded-xl shadow-md">
+      <div className="flex items-center text-green-600 mb-1">
+        <BookOpen size={20} className="mr-2" />
+        <span className="text-xl font-bold">{mockLearningData.lessonsCompleted}</span>
       </div>
-    );
-  }
-
-  // Unauthenticated View
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-app-background dark:bg-slate-900 transition-colors duration-300">
-        <div className="flex justify-end p-4">
-           <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
-        </div>
-        <AuthModule 
-            view={view === 'signup' || view === 'forgot-password' ? view : 'login'} 
-            onLoginSuccess={handleLoginSuccess} 
-            onNavigate={setView} 
-            logoUrl={readsLogo} 
-        />
+      <p className="text-sm text-gray-600">Lessons Completed</p>
+    </div>
+    <div className="p-4 bg-white rounded-xl shadow-md">
+      <div className="flex items-center text-yellow-600 mb-1">
+        <CheckCircle size={20} className="mr-2" />
+        <span className="text-xl font-bold">{mockLearningData.testsPassed}</span>
       </div>
-    );
-  }
+      <p className="text-sm text-gray-600">Tests Passed</p>
+    </div>
+  </div>
+);
 
-  // Authenticated View
+/**
+ * Progress Bar Component
+ */
+const ProgressBar = ({ done, total }) => {
+  const percentage = (done / total) * 100;
   return (
-    <div className="min-h-screen bg-app-background dark:bg-slate-900 text-reads-dark dark:text-gray-100 font-sans transition-colors duration-300 flex">
-      
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
-
-      <aside className={`fixed md:sticky top-0 h-screen w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 p-6 z-50 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="flex justify-between items-center mb-10">
-          <div className="flex items-center gap-2">
-            <img src={readsLogo} alt="Reads Logo" className="w-8 h-8 rounded-full" />
-            <h1 className="text-xl font-bold text-reads-dark dark:text-white tracking-tighter">$READS</h1>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden"><X /></button>
-        </div>
-        
-        <nav className="space-y-2">
-          <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={view === 'dashboard'} onClick={() => handleNavigate('dashboard')} />
-          <SidebarItem icon={<BookOpen size={20} />} label="Learn & Earn" active={view === 'learn'} onClick={() => handleNavigate('learn', 'categories')} />
-          <SidebarItem icon={<Wallet size={20} />} label="Wallet" active={view === 'wallet'} onClick={() => handleNavigate('wallet')} />
-          <SidebarItem icon={<User size={20} />} label="Profile" active={view === 'profile'} onClick={() => handleNavigate('profile')} />
-          <SidebarItem icon={<SettingsIcon size={20} />} label="Settings" active={view === 'settings'} onClick={() => handleNavigate('settings')} />
-        </nav>
-        
-        <div className="absolute bottom-6 w-full pr-12">
-            <button 
-                onClick={handleLogout}
-                className="w-full py-2 px-3 rounded-xl text-red-500 border border-red-500/20 hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
-            >
-                <User size={18} /> Log Out
-            </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="p-4 flex justify-between items-center bg-white dark:bg-slate-800 md:hidden border-b border-gray-200 dark:border-slate-700">
-          <button onClick={() => setSidebarOpen(true)}><Menu /></button>
-          <span className="font-bold">$READS</span>
-          <ThemeToggle onClick={toggleTheme} isDark={darkMode} />
-        </header>
-
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full pb-20">
-          {view === 'dashboard' && <Dashboard user={user} wallet={{balance: tokenBalance}} onNavigate={handleNavigate} />}
-          
-          {view === 'learn' && (
-            <LearnModule 
-              subView={subView} 
-              activeData={navPayload} 
-              onNavigate={handleNavigate} 
-              onUpdateWallet={(amt) => setTokenBalance(b => b + amt)} 
-            />
-          )}
-          
-          {view === 'wallet' && <WalletModule balance={tokenBalance} />}
-          
-          {view === 'profile' && <ProfileModule user={user} onLogout={handleLogout} />}
-          
-          {view === 'settings' && <SettingsModule darkMode={darkMode} toggleTheme={toggleTheme} />}
-        </div>
-      </main>
+    <div className="mt-4 p-5 bg-white rounded-xl shadow-md">
+      <p className="text-sm text-gray-600 font-medium mb-2">Your Weekly Progress</p>
+      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-indigo-500 transition-all duration-500 ease-out"
+          style={{ width: `${percentage}%` }}
+        ></div>
+      </div>
+      <div className="flex justify-between mt-2 text-xs font-medium">
+        <p className="text-indigo-600">{done}/{total} lessons completed</p>
+        <p className="text-gray-600">{Math.round(percentage)}%</p>
+      </div>
     </div>
   );
-}
+};
+
+/**
+ * Next Lesson Card
+ */
+const NextLessonCard = () => (
+  <div className="flex items-center justify-between p-5 bg-white rounded-xl shadow-md mt-6">
+    <div>
+      <p className="text-sm text-gray-500">Next Lesson</p>
+      <p className="text-lg font-semibold text-gray-900 mb-3">{mockLearningData.nextLessonTitle}</p>
+      <button className="bg-green-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 transition duration-200">
+        Continue
+      </button>
+    </div>
+    <div className="p-4 bg-green-100 text-green-600 rounded-xl">
+      <BookOpen size={32} />
+    </div>
+  </div>
+);
+
+// --- DASHBOARD VIEWS ---
+
+const HomeDashboard = ({ setActiveTab }) => (
+  <div className="p-4 space-y-4">
+    {/* Header */}
+    <header className="flex justify-between items-center pb-2">
+      <div className="flex items-center space-x-3">
+        <img 
+          src={mockUserData.avatarUrl} 
+          alt="User Avatar" 
+          className="w-10 h-10 rounded-full border-2 border-indigo-500"
+        />
+        <div>
+          <p className="text-sm text-gray-500">Welcome Back,</p>
+          <p className="text-lg font-bold text-gray-900">{mockUserData.name}</p>
+        </div>
+      </div>
+      <Bell size={24} className="text-gray-500 cursor-pointer hover:text-indigo-600" />
+    </header>
+
+    {/* Token Balance */}
+    <TokenBalanceCard />
+    
+    {/* Lessons and Tests Stats */}
+    <LearningStatsCard />
+
+    {/* Quick Action Grid */}
+    <div className="grid grid-cols-2 gap-4 pt-2">
+      <GridCard icon={BookOpen} title="Start Learning" onClick={() => {/* Handle Navigation to Learning */}} />
+      <GridCard icon={CheckCircle} title="Take a Test" onClick={() => {/* Handle Navigation to Tests */}} />
+      <GridCard icon={Wallet} title="Wallet" onClick={() => setActiveTab('wallet')} />
+      {/* Empty Card to match layout in image, optional */}
+      <div className="hidden sm:block"></div> 
+    </div>
+    
+    {/* Weekly Progress */}
+    <ProgressBar 
+      done={mockLearningData.weeklyLessonsDone} 
+      total={mockLearningData.weeklyLessonsTotal} 
+    />
+    
+    {/* Next Lesson */}
+    <NextLessonCard />
+  </div>
+);
+
+const WalletDashboard = () => (
+  <div className="p-4 space-y-6">
+    <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Wallet Dashboard</h1>
+    
+    <TokenBalanceCard /> {/* Reusing the balance card */}
+
+    <div className="p-6 bg-white rounded-xl shadow-lg">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+        <DollarSign size={20} className="mr-2 text-green-600" />
+        Transaction History (Mock)
+      </h2>
+      <ul className="divide-y divide-gray-200">
+        <li className="flex justify-between py-3">
+          <span>Daily Bonus</span>
+          <span className="text-green-600">+100 $READS</span>
+        </li>
+        <li className="flex justify-between py-3">
+          <span>Purchased Course</span>
+          <span className="text-red-600">-500 $READS</span>
+        </li>
+        <li className="flex justify-between py-3">
+          <span>Module Completion</span>
+          <span className="text-green-600">+250 $READS</span>
+        </li>
+      </ul>
+      <button className="w-full mt-4 bg-indigo-500 text-white font-semibold py-2 rounded-lg hover:bg-indigo-600">
+        View Full History
+      </button>
+    </div>
+  </div>
+);
+
+// --- Main Application Component ---
+
+const App = () => {
+  // State for navigation: 'home', 'learn', 'wallet', 'profile'
+  const [activeTab, setActiveTab] = useState('home');
+
+  // Determine which component to render
+  const renderDashboard = useMemo(() => {
+    switch (activeTab) {
+      case 'home':
+        return <HomeDashboard setActiveTab={setActiveTab} />;
+      case 'learn':
+        // Reuse the HomeDashboard structure or create a dedicated one later
+        return <HomeDashboard setActiveTab={setActiveTab} />; 
+      case 'wallet':
+        return <WalletDashboard />;
+      case 'profile':
+        return <div className="p-8 text-center text-gray-500">Profile Settings Placeholder</div>;
+      default:
+        return <HomeDashboard setActiveTab={setActiveTab} />;
+    }
+  }, [activeTab]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans pb-20">
+      <main className="max-w-md mx-auto">
+        {renderDashboard}
+      </main>
+      
+      {/* Bottom Navigation Bar (Fixed for Mobile) */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-20">
+        <div className="flex justify-around max-w-md mx-auto">
+          {[{ tab: 'home', icon: LayoutDashboard, label: 'Home' }, 
+            { tab: 'learn', icon: BookOpen, label: 'Learn' }, 
+            { tab: 'wallet', icon: Wallet, label: 'Wallet' }, 
+            { tab: 'profile', icon: User, label: 'Profile' }].map(({ tab, icon: Icon, label }) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex flex-col items-center p-3 transition duration-200 ${
+                activeTab === tab
+                  ? 'text-indigo-600 font-bold'
+                  : 'text-gray-500 hover:text-indigo-600'
+              }`}
+            >
+              <Icon size={24} />
+              <span className="text-xs mt-1">{label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+export default App;
+
